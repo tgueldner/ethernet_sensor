@@ -108,8 +108,14 @@ void error(char *str)
   
   // red LED indicates error
   digitalWrite(redLEDpin, HIGH);
+}
 
-  //while(1);
+void normal(char *str)
+{
+  Serial.println(str);
+  
+  // red LED indicates error
+  digitalWrite(redLEDpin, LOW);
 }
 
 void callback(char* topic, byte* payload, unsigned int length) {
@@ -131,24 +137,45 @@ void setup()
   
   // use debugging LEDs
   pinMode(redLEDpin, OUTPUT);
-  pinMode(12, OUTPUT);
-  digitalWrite(12, HIGH);
   
   Serial.print(F("Starting network ..."));
   Ethernet.begin(mac, ip);
+  Serial.println(F("done"));
+  
+  connectToMQTT();
+}
+
+void connectToMQTT() {
+  Serial.print(F("Connect to MQTT server..."));
   if (client.connect("kellerSensor")) {
     client.subscribe("keller/sensor/get");
+    normal("done");
+  } else {
+    error("failed");
   }
-  Serial.println(F("done"));
 }
 
 void loop()
 {
   handleSound();
   
+  checkConnection();
+  
   client.loop();
   
   delay(1000);
+}
+
+int keepalive = 0;
+void checkConnection() {
+  keepalive++;
+  // check every 5 minutes 
+  if(keepalive > 5 * 60) {
+    keepalive = 0;
+    if(!client.connected()) {
+      connectToMQTT();
+    }
+  }
 }
 
 void handleSound(void) {
@@ -178,9 +205,6 @@ void handleSound(void) {
   
 }
 
-char on[] = {'1'};
-char off[] = {'0'};
-
 void sendSensorData() {
   digitalWrite(redLEDpin, HIGH);
   
@@ -205,8 +229,9 @@ void sendSensorData() {
   
   dtostrf(rh, 4, 2, buffer);
   client.publish("keller/sensor/rh", buffer);
- 
-  client.publish("keller/sensor/lueftung", soundOn?on:off);
+   
+  sprintf(buffer, "%d", soundOn?1:0);
+  client.publish("keller/sensor/lueftung", buffer);
 
   digitalWrite(redLEDpin, LOW);
 }
