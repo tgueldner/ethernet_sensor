@@ -133,7 +133,9 @@ void setup()
   Serial.println(F("done"));
   
   // sound
+#if SOUNDSENSORPIN
   pinMode(SOUNDSENSORPIN, INPUT);
+#endif
   
   // use debugging LEDs
   pinMode(redLEDpin, OUTPUT);
@@ -161,7 +163,9 @@ void connectToMQTT() {
 
 void loop()
 {
+#if SOUNDSENSORPIN
   handleSound();
+#endif
   
   checkConnection();
   
@@ -182,6 +186,7 @@ void checkConnection() {
   }
 }
 
+#if SOUNDSENSORPIN
 void handleSound(void) {
   int soundReading = 0;
   for(int i=0; i<50; i++) {
@@ -206,8 +211,8 @@ void handleSound(void) {
   Serial.print(" soundOn:");
   Serial.println(soundOn);
 #endif
-  
 }
+#endif
 
 void sendSensorData() {
   digitalWrite(redLEDpin, HIGH);
@@ -233,9 +238,11 @@ void sendSensorData() {
   
   dtostrf(rh, 4, 2, buffer);
   client.publish("keller/sensor/rh", buffer);
-   
+
+#if SOUNDSENSORPIN   
   sprintf(buffer, "%d", soundOn?1:0);
   client.publish("keller/sensor/lueftung", buffer);
+#endif
 
   digitalWrite(redLEDpin, LOW);
 }
