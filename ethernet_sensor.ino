@@ -53,7 +53,7 @@ DHT dht(DHTPIN, DHTTYPE);
 // Update these with values suitable for your network.
 byte mac[]    = {  0x20, 0x73, 0x76, 0x7C ,0xA0, 0xDA };
 byte server[] = { 192, 168, 10, 230 };
-byte ip[]     = { 192, 168, 10, 210 };
+// byte ip[]     = { 192, 168, 10, 210 };
 
 EthernetClient ethClient;
 PubSubClient client(server, 1883, callback, ethClient);
@@ -138,14 +138,18 @@ void setup()
   // use debugging LEDs
   pinMode(redLEDpin, OUTPUT);
   
-  Serial.print(F("Starting network ..."));
-  Ethernet.begin(mac, ip);
-  Serial.println(F("done"));
-  
   connectToMQTT();
 }
 
 void connectToMQTT() {
+  Serial.print(F("Starting network ..."));
+  if(Ethernet.begin(mac) == 0) {
+    error("failed");
+    return;
+  } else {
+    normal("done");	
+  }
+  
   Serial.print(F("Connect to MQTT server..."));
   if (client.connect("kellerSensor")) {
     client.subscribe("keller/sensor/get");
