@@ -4,8 +4,13 @@
 #include "DHT.h"
 #include <EEPROM.h>  // Contains EEPROM.read() and EEPROM.write()
 
+// sensor name -> doesn't work at the moment!
+// #define SENSORNAME sensor2
+// const String SENSORNAME = "sensor2";
+
 // Sound Sensor Pin
-#define SOUNDSENSORPIN 3
+// define SOUNDSENSORPIN to use this function on given pin
+// #define SOUNDSENSORPIN 3
 #define SOUNDLIMIT 10
 
 // START DHT
@@ -51,7 +56,7 @@ DHT dht(DHTPIN, DHTTYPE);
 
 
 // Update these with values suitable for your network.
-byte mac[]    = {  0x20, 0x73, 0x76, 0x7C ,0xA0, 0xDA };
+byte mac[]    = {  0x20, 0x73, 0x76, 0x7C ,0xA0, 0xDB };
 byte server[] = { 192, 168, 10, 230 };
 // byte ip[]     = { 192, 168, 10, 210 };
 
@@ -126,7 +131,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
 void setup()
 {
   Serial.begin(9600);
-  Serial.println(F("Temp/RH sensor V0.1 started."));
+  Serial.println(F("Temp/RH sensor V0.2 started."));
   
   Serial.print(F("Loading config ..."));
   loadConfig();
@@ -151,6 +156,15 @@ void connectToMQTT() {
   } else {
     normal("done");	
   }
+  
+  // print your local IP address:
+  Serial.print(F("IP address: "));
+  for (byte thisByte = 0; thisByte < 4; thisByte++) {
+    // print the value of each byte of the IP address:
+    Serial.print(Ethernet.localIP()[thisByte], DEC);
+    Serial.print("."); 
+  }
+  Serial.println();
   
   Serial.print(F("Connect to MQTT server..."));
   if (client.connect("kellerSensor")) {
@@ -234,14 +248,14 @@ void sendSensorData() {
   
   char buffer[10];
   dtostrf(temp, 4, 2, buffer);
-  client.publish("keller/sensor/temp", buffer);
+  client.publish("keller/sensor2/temp", buffer);
   
   dtostrf(rh, 4, 2, buffer);
-  client.publish("keller/sensor/rh", buffer);
+  client.publish("keller/sensor2/rh", buffer);
 
 #if SOUNDSENSORPIN   
   sprintf(buffer, "%d", soundOn?1:0);
-  client.publish("keller/sensor/lueftung", buffer);
+  client.publish("keller/sensor2/lueftung", buffer);
 #endif
 
   digitalWrite(redLEDpin, LOW);
